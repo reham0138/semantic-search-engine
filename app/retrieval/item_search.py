@@ -31,12 +31,22 @@ class ItemSearcher:
         query: str,
         items: list[dict],
         top_k: int | None = None,
-        min_score: float | None = None
+        min_score: float | None = None,
+        max_score_gap: float | None = None
     ) -> list[dict]:
+        """Return items scoring at least min_score and within max_score_gap
+        of the best match. Unset limits use the collection defaults."""
+
         if collection not in self.collections:
             raise KeyError(collection)
 
         config = self.collections[collection]
+
+        if min_score is None:
+            min_score = config.min_score
+
+        if max_score_gap is None:
+            max_score_gap = config.max_score_gap
 
         documents = []
         searchable_items = []
@@ -59,12 +69,19 @@ class ItemSearcher:
         norms = np.maximum(np.linalg.norm(vectors, axis=1), 1e-12)
         scores = (vectors @ query_vector) / norms
 
+        order = np.argsort(-scores, kind="stable")
+
+        threshold = -np.inf if min_score is None else min_score
+
+        if max_score_gap is not None:
+            threshold = max(threshold, float(scores[order[0]]) - max_score_gap)
+
         results = []
 
-        for i in np.argsort(-scores, kind="stable"):
+        for i in order:
             score = float(scores[i])
 
-            if min_score is not None and score < min_score:
+            if score < threshold:
                 break
 
             results.append({

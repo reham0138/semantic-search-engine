@@ -58,6 +58,7 @@ class ItemSearchRequest(BaseModel):
     items: list[dict[str, Any]] = Field(max_length=config.max_items)
     top_k: int | None = Field(default=None, ge=1, le=config.max_items)
     min_score: float | None = Field(default=None, ge=-1.0, le=1.0)
+    max_score_gap: float | None = Field(default=None, ge=0.0, le=2.0)
 
 
 class SearchResult(BaseModel):
@@ -98,7 +99,9 @@ def list_collections() -> dict:
     return {
         name: {
             "id_field": collection.id_field,
-            "searchable_fields": collection.searchable_fields
+            "searchable_fields": collection.searchable_fields,
+            "min_score": collection.min_score,
+            "max_score_gap": collection.max_score_gap
         }
         for name, collection in config.collections.items()
     }
@@ -140,7 +143,8 @@ def search_collection(
             body.query,
             body.items,
             top_k=body.top_k,
-            min_score=body.min_score
+            min_score=body.min_score,
+            max_score_gap=body.max_score_gap
         )
     except ValueError as error:
         raise HTTPException(status_code=422, detail=str(error)) from error

@@ -1,5 +1,6 @@
 import unittest
 import zlib
+from dataclasses import replace
 
 import numpy as np
 
@@ -41,7 +42,11 @@ class ItemSearcherTests(unittest.TestCase):
 
     def setUp(self):
         self.embedder = BagOfWordsEmbedder()
-        self.searcher = ItemSearcher(SearchConfig().collections, self.embedder)
+        self.collections = {
+            name: replace(collection, min_score=None, max_score_gap=None)
+            for name, collection in SearchConfig().collections.items()
+        }
+        self.searcher = ItemSearcher(self.collections, self.embedder)
 
     def test_ranks_items_and_returns_original_objects(self):
         results = self.searcher.search("delivery-meals", "chicken garlic", MEALS)
@@ -68,6 +73,23 @@ class ItemSearcherTests(unittest.TestCase):
         results = self.searcher.search("delivery-meals", "pizza", MEALS, min_score=0.1)
         self.assertEqual([result["id"] for result in results], ["2"])
 
+    def test_collection_defaults_apply_relative_cutoff(self):
+        collections = {
+            "delivery-meals": replace(
+                self.collections["delivery-meals"], min_score=0.0, max_score_gap=0.2
+            )
+        }
+        searcher = ItemSearcher(collections, self.embedder)
+
+        results = searcher.search("delivery-meals", "chicken garlic", MEALS)
+
+        self.assertEqual([result["id"] for result in results], ["3"])
+
+        results = searcher.search(
+            "delivery-meals", "chicken garlic", MEALS, max_score_gap=2.0
+        )
+        self.assertEqual(len(results), 3)
+
     def test_reuses_cached_embeddings(self):
         self.searcher.search("delivery-meals", "burger", MEALS)
         encoded = self.embedder.encoded_documents
@@ -77,7 +99,7 @@ class ItemSearcherTests(unittest.TestCase):
         self.assertEqual(self.embedder.encoded_documents, encoded)
 
     def test_cache_size_is_bounded(self):
-        searcher = ItemSearcher(SearchConfig().collections, self.embedder, cache_size=2)
+        searcher = ItemSearcher(self.collections, self.embedder, cache_size=2)
 
         searcher.search("delivery-meals", "burger", MEALS)
 

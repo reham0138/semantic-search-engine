@@ -25,6 +25,11 @@ class CollectionConfig:
     searchable_fields: dict[str, float]
     id_field: str = "id"
 
+    # multilingual-e5 gives unrelated text scores around 0.80-0.84, so results
+    # must pass an absolute floor and stay close to the best match.
+    min_score: float | None = 0.85
+    max_score_gap: float | None = 0.02
+
 
 def _default_collections() -> dict[str, CollectionConfig]:
     return {
@@ -39,8 +44,10 @@ def _default_collections() -> dict[str, CollectionConfig]:
         "delivery-meals": CollectionConfig(
             searchable_fields={
                 "name": 3.0,
+                "localizedName": 3.0,
                 "description": 2.0,
                 "category": 1.0,
+                "localizedCategory": 1.0,
                 "ingredients": 1.0
             }
         )

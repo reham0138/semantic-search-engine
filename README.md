@@ -63,6 +63,25 @@ curl "http://localhost:8000/search?q=something%20cheesy&top_k=3"
 
 `item` is the full original record, so any extra fields (price, image, slug...) come back as-is.
 
+### Searching data sent by the app (`/search/{collection}`)
+
+The store and delivery apps keep their catalogue in the browser (mock JSON plus localStorage edits), so they send the items they currently show and get them back ranked:
+
+| Method | Path | Body | Description |
+| ------ | ---- | ---- | ----------- |
+| GET | `/collections` | - | collections with their weighted fields and cutoffs |
+| POST | `/search/store-products` | `{"query": "...", "items": [...]}` | store products (`title` 3, `description` 2, `category` 1, `brand` 1) |
+| POST | `/search/delivery-meals` | `{"query": "...", "items": [...]}` | meals (`name`/`localizedName` 3, `description` 2, `category`/`localizedCategory` 1, `ingredients` 1) |
+
+Optional body fields: `top_k`, `min_score`, `max_score_gap`. By default a result must score at least `0.85` and be within `0.02` of the best match. multilingual-e5 scores unrelated text around 0.80-0.84, so this hides noise. Field embeddings are cached by text, so repeat searches only embed the query. Collections are defined in `app/core/config.py`.
+
+Connected apps (`Desktop\apps`):
+
+- `store-app-`: `frontend/src/shared/services/semanticSearch.service.ts` filters by branch stock, then calls `/search/store-products`.
+- `delivey-app`: `frontend/src/shared/services/semanticSearch.service.ts` is used by `pages/Meals.tsx`. Name matches are shown first, and the page falls back to them if the API is down.
+
+Both read `VITE_SEARCH_API_URL` (default `http://127.0.0.1:8000`).
+
 ## Using your own data
 
 * Replace `datasets/products.json` with a JSON array of objects. Each object needs an `id`.
