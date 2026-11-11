@@ -23,13 +23,26 @@ datasets/products.json
 
 ## Run it
 
+Requirements: Python 3.10+ and git. No API keys or accounts are needed; the model is downloaded from Hugging Face on first start and then runs locally.
+
 ```bash
+git clone https://github.com/reham0138/semantic-search-engine.git
+cd semantic-search-engine
+
+python -m venv .venv
+# Windows:      .venv\Scripts\activate
+# macOS/Linux:  source .venv/bin/activate
+
 pip install -r requirements.txt
-uvicorn app.main:app --reload --port 8000
+python -m uvicorn app.main:app --port 8000
 ```
 
-The first start downloads the model (if it is not cached yet) and builds the index.
-Interactive docs: http://localhost:8000/docs
+The first start downloads the model (~470 MB) and builds the index, so it can take a few minutes. Wait for `Application startup complete`, then check:
+
+- http://127.0.0.1:8000/health returns `"status": "ok"`
+- http://127.0.0.1:8000/docs has interactive API docs
+
+Keep this terminal open while you run the store or delivery app.
 
 Run the tests:
 
@@ -93,7 +106,7 @@ Both read `VITE_SEARCH_API_URL` (default `http://127.0.0.1:8000`).
 
 | Setting | Where | Default |
 | ------- | ----- | ------- |
-| Allowed browser origins (CORS) | `ALLOWED_ORIGINS` env var, comma-separated | `http://localhost:3000,http://localhost:5173` |
+| Allowed browser origins (CORS) | `ALLOWED_ORIGINS` env var, comma-separated | `localhost` and `127.0.0.1` on ports 3000, 4173, 5173, 5174 |
 | Model, prefixes, top_k limits, paths | `app/core/config.py` | see file |
 
 ---
