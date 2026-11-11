@@ -1,0 +1,29 @@
+[
+  {
+    "id": "P101",
+    "name": "Chicken Burger",
+    "description": "Grilled chicken with cheese",
+    "category": "Burgers",
+    "price": 5.5
+  },
+  {
+    "id": "P102",
+    "name": "Vegetable Pizza",
+    "description": "Pizza with fresh vegetables",
+    "category": "Pizza",
+    "price": 7.0
+  },
+  {
+    "id": "P103",
+    "name": 3333,
+    "description": "شاورما دجاج مع الثوم والمخلل",
+    "category": "وجبات سريعة",
+    "price": 4.5
+  },
+  {
+    "id": "P104",
+    "name": "Cheese Pizza",
+    "category": "Pizza",
+    "price": 6.0
+}
+]
